@@ -26,7 +26,7 @@
 
 \section{Motivation}
 
-This report introduces \emph{botworld}, a cellular automaton used for studying self-modifying agents.
+This report introduces \emph{Botworld}, a cellular automaton used for studying self-modifying agents.
 
 Most formal frameworks for studying self-modifying agents split the universe into an agent and an environment. The agent interacts with the environment only via discrete input and output channels.
 
@@ -36,15 +36,15 @@ Intuitively, this separation is not a fatal flaw, but merely a tool for simplify
 
 As it turns out, many interesting obstacles arise when agents are embedded in an environment. For example, agents whose source code may be read may be subjected to Newcomb-like problems (with entities that simulate the agent's actions and choose their actions accordingly).
 
-Descision theoretical tools for solving such problems alrdeady exist (such as Vladimir Slepnev's formalism of updateless decision theory); botworld provides an environment where we can actually build the games, program the agents, and run the system.
+Descision theoretical tools for solving such problems alrdeady exist (such as Vladimir Slepnev's formalism of updateless decision theory); Botworld provides an environment where we can actually build the games, program the agents, and run the system.
 
-Furthermore, certain obstacles to self-reference arise when non-cartesian agents attempt to achieve condfidence in their future actions. Some of these issues are raised in the \emph{Tiling Agents} paper by Yudkowsky and Herreshoff; botworld gives us a concrete environment in which we can examine them.
+Furthermore, certain obstacles to self-reference arise when non-cartesian agents attempt to achieve condfidence in their future actions. Some of these issues are raised in the \emph{Tiling Agents} paper by Yudkowsky and Herreshoff; Botworld gives us a concrete environment in which we can examine them.
 
-One of the primary benefits of botworld is \emph{concreteness}: when working with abstract problems of self-reference, it is often very useful to see a discrete game in a fully specified world that directly exhibits the obstacle under consideration. Botworld makes it easier to visualize these obstacles.
+One of the primary benefits of Botworld is \emph{concreteness}: when working with abstract problems of self-reference, it is often very useful to see a discrete game in a fully specified world that directly exhibits the obstacle under consideration. Botworld makes it easier to visualize these obstacles.
 
-Conversely, botworld also makes it easier to visualize suggested agent architectures, which in turn makes it easier to visualize potential problems and probe the architecture for edge cases.
+Conversely, Botworld also makes it easier to visualize suggested agent architectures, which in turn makes it easier to visualize potential problems and probe the architecture for edge cases.
 
-Finally, botworld is a tool for communicating. It is our hope that botworld will help others understand the varying formalisms for self-modifying agents by giving them a concrete way to visualize such architectures being implemented. Furthermore, botworld gives us a concrete way to illustrate various obstacles, by implementing botworld games in which the obstacles arise.
+Finally, Botworld is a tool for communicating. It is our hope that Botworld will help others understand the varying formalisms for self-modifying agents by giving them a concrete way to visualize such architectures being implemented. Furthermore, Botworld gives us a concrete way to illustrate various obstacles, by implementing Botworld games in which the obstacles arise.
 
 For example, consider an agent that is searching for a strategy in some game, and wants to do at least as well as some fallback strategy. In a traditional cartesian framework, the agent may adopt a simple architecture that searches for strategy/proof pairs where the proof proves that the strategy does better than the fallback.
 
@@ -52,9 +52,9 @@ In a non-cartesian environment, such a proof will not suffice. Consider, for exa
 
 An agent in the same world as the stupidity rewarder with a fallback strategy of ``do nothing ever'' will fail to self-modify into an agent that does nothing ever, because it falsely believes that its proof-searching strategy will do at least as well as its fallback strategy. This agent fails to realize that the stupidity rewarder can distinguish between robots that \emph{actually} do nothing ever and robots that search for strategies (with ``do nothing ever'' as a fallback).
 
-This problem is somewhat abstract and perhaps difficult to visualize---but in botworld, we can \emph{actually build a game} with a stupidity rewarder and a proof-searching robot, and see how the proof searcher goes wrong.
+This problem is somewhat abstract and perhaps difficult to visualize---but in Botworld, we can \emph{actually build a game} with a stupidity rewarder and a proof-searching robot, and see how the proof searcher goes wrong.
 
-Botworld has helped us gain a deeper understanding of varying formalisms for self-modifying agents and the obstacles they face. It is our hope that botworld will help others more concretely understand these issues as well.
+Botworld has helped us gain a deeper understanding of varying formalisms for self-modifying agents and the obstacles they face. It is our hope that Botworld will help others more concretely understand these issues as well.
 
 \section{Overview}
 
@@ -62,15 +62,15 @@ Botworld is a high level cellular automaton: the contents of each cell can be qu
 
 Botworld is a cellular automaton with \emph{robots} and \emph{items}. The robots navigate a grid of cells (some of which may be impassable walls) and manipulate the items. Some items are quite useful: for example, shield items can protect robots from aggressors. Other items are intrinsically valuable, though the values of various items depends upon the game being played.
 
-Among the items are \emph{robot parts}, which the robots can use to construct other robots. Robots may also be broken down into their component parts (hence the necessity for shields). Thus, robots in botworld are quite versatile: a well-programmed robot can reassemble its enemies into allies or construct a robot horde.
+Among the items are \emph{robot parts}, which the robots can use to construct other robots. Robots may also be broken down into their component parts (hence the necessity for shields). Thus, robots in Botworld are quite versatile: a well-programmed robot can reassemble its enemies into allies or construct a robot horde.
 
-Because robots are transient objects, it is important to note that players are not robots. Many games begin by allowing each player to specify the initial state of a single robot, but clever players will write programs that soon distribute themselves across many robots or construct fleets of allied robots. Thus, botworld games are not scored depending upon the actions of the robot. Instead, each player is assigned a home square (or squares), and botworld games are scored according to the contents of the home squares at the end of the game.
+Because robots are transient objects, it is important to note that players are not robots. Many games begin by allowing each player to specify the initial state of a single robot, but clever players will write programs that soon distribute themselves across many robots or construct fleets of allied robots. Thus, Botworld games are not scored depending upon the actions of the robot. Instead, each player is assigned a home square (or squares), and Botworld games are scored according to the contents of the home squares at the end of the game.
 
 Robots cannot see the contents of robot register machines by default, though robots \emph{can} execute an inspection to see the precise state of another robot's register machine. This can lead to interesting games, particularly when the inspecting robot is powerful enough to simulate the targeted robot in full.
 
-It is important to note that there are two different notions of time in botworld. The cellular automaton evolution proceeds in discrete steps according to the rules described below. During each cellular automaton step, the machines inside the robots are run for some finite number of ticks.
+It is important to note that there are two different notions of time in Botworld. The cellular automaton evolution proceeds in discrete steps according to the rules described below. During each cellular automaton step, the machines inside the robots are run for some finite number of ticks.
 
-Like any cellular automaton, botworld updates in discrete \emph{steps} which apply to every cell. Each cell is updated using only information from the cell and its immediate neighbors. Roughly speaking, the step function proceeds in the following manner for each individual square:
+Like any cellular automaton, Botworld updates in discrete \emph{steps} which apply to every cell. Each cell is updated using only information from the cell and its immediate neighbors. Roughly speaking, the step function proceeds in the following manner for each individual square:
 
 \begin{enumerate*}
   \item The output register of the register machine of each robot in the square is read to determine the robot's \emph{command}. Note that robots are expected to be initialized with their first command in the output register.
@@ -90,7 +90,7 @@ These rules allow for a wide variety of games, from NP-hard knapsack packing gam
 This report is a literate Haskell file, so we must begin the code with the module definition and the Haskell imports.
 
 \begin{code}
-module BotWorld where
+module Botworld where
 import Control.Applicative ((<$>), (<*>))
 import Control.Monad (join)
 import Control.Monad.Reader (Reader, asks)
@@ -107,7 +107,7 @@ Botworld cells may be either walls (which are immutable and impassible) or \emph
 type Cell = Maybe Square
 \end{code}
 
-The interesting parts of botworld games happen in the squares.
+The interesting parts of Botworld games happen in the squares.
 
 \begin{code}
 data Square = Square
@@ -121,10 +121,10 @@ The ordering is arbitrary, but is used by robots to specify the targets of their
 Botworld, like any cellular automaton, is composed of a grid of cells.
 
 \begin{code}
-type BotWorld = Grid Cell
+type Botworld = Grid Cell
 \end{code}
 
-We do not mean to tie the specification of botworld to any particular grid implementation: botworld grids may be finite or infinite, wrapping (pacman style) or non-wrapping. The specific implementation used in this report is somewhat monotonous, and may be found in Appendix~\ref{app:grid}.
+We do not mean to tie the specification of Botworld to any particular grid implementation: Botworld grids may be finite or infinite, wrapping (pacman style) or non-wrapping. The specific implementation used in this report is somewhat monotonous, and may be found in Appendix~\ref{app:grid}.
 
 \subsection{Robots}
 
@@ -159,20 +159,20 @@ canLift :: Robot -> Item -> Bool
 canLift r item = strength (frame r) >= sum (map weight $ item : inventory r)
 \end{code}
 
-Robots also contain a register machine, which consists of a \emph{processor} and a \emph{memory}. The processor is defined purely by the number of instructions it can compute per botworld step, and the memory is simply a list of registers.
+Robots also contain a register machine, which consists of a \emph{processor} and a \emph{memory}. The processor is defined purely by the number of instructions it can compute per Botworld step, and the memory is simply a list of registers.
 
 \begin{code}
 newtype Processor = P { speed :: Int } deriving (Eq, Show)
 type Memory = [Register]
 \end{code}
 
-In this report, the register machines use a very simple instruction set which we call the \emph{constree language}. A full implementation can be found in Appendix~\ref{app:constree}. However, when modelling concrete decision problems in botworld, we may choose to replace this simple language by something easier to use. (In particular, many robot programs will need to reason about botworld's laws. Encoding botworld into the constree language is no trivial task.)
+In this report, the register machines use a very simple instruction set which we call the \emph{constree language}. A full implementation can be found in Appendix~\ref{app:constree}. However, when modelling concrete decision problems in Botworld, we may choose to replace this simple language by something easier to use. (In particular, many robot programs will need to reason about Botworld's laws. Encoding Botworld into the constree language is no trivial task.)
 
 \subsection{Items}
 
-Botworld squares contain \emph{items} which may be manipulated by the robots. Items include \emph{robot parts} which can be used to construct robots, and \emph{shields} which can be used to protect a robot from aggressors, and various types of \emph{cargo}, a catch-all term for items that have no functional significance inside botworld but that players try to collect to increase their score.
+Botworld squares contain \emph{items} which may be manipulated by the robots. Items include \emph{robot parts} which can be used to construct robots, and \emph{shields} which can be used to protect a robot from aggressors, and various types of \emph{cargo}, a catch-all term for items that have no functional significance inside Botworld but that players try to collect to increase their score.
 
-At the end of a botworld game, a player is scored on the value of all items carried by robots in the player's \emph{home square}. We may imagine these robots being airlifted and the items in their possession being given to the player. The value of different items varies from game to game; see Section~\ref{sec:games} for details.
+At the end of a Botworld game, a player is scored on the value of all items carried by robots in the player's \emph{home square}. We may imagine these robots being airlifted and the items in their possession being given to the player. The value of different items varies from game to game; see Section~\ref{sec:games} for details.
 
 Robot parts are either \emph{processors}, \emph{registers}, or \emph{frames}.
 
@@ -218,7 +218,7 @@ shatter r = FramePart (frame r) : ProcessorPart (processor r) : rparts where
 
 \subsection{Commands and actions}
 
-Robot machines have a special \emph{output register} which is used to determine the action taken by the robot in the step. Robot machines are run at the \emph{end} of each botworld step, and are expected to leave a command in the output register. This command determines the behavior of the robot in the following step.
+Robot machines have a special \emph{output register} which is used to determine the action taken by the robot in the step. Robot machines are run at the \emph{end} of each Botworld step, and are expected to leave a command in the output register. This command determines the behavior of the robot in the following step.
 
 Available commands are:
 
@@ -288,7 +288,7 @@ step sq neighbors = Square robots' items' where
   (robots, intents) = unzip $ map takeOutput $ robotsIn sq
 \end{code}
 
-Notice that we read the robot's output register at the beginning of each botworld step. (We run the robot register machines at the end of each step.) This means that robots must be initialized with their first command in the output register.
+Notice that we read the robot's output register at the beginning of each Botworld step. (We run the robot register machines at the end of each step.) This means that robots must be initialized with their first command in the output register.
 
 Before we can compute the actions that are actually taken by each robot, we need to compute some data that will help us identify failed actions.
 
@@ -639,7 +639,7 @@ It remains only to specify the updated item list. This is the same as the update
   items' = unaffected ++ dropped ++ concat [xs ++ ys | (xs, ys) <- fallen]
 \end{code}
 
-This fully specifies the step function for botworld cells. To reiterate:
+This fully specifies the step function for Botworld cells. To reiterate:
 
 \begin{enumerate*}
   \item Robot machine output registers are read to determine robot intents.
@@ -655,11 +655,11 @@ This fully specifies the step function for botworld cells. To reiterate:
 
 \subsection{Games} \label{sec:games}
 
-Botworld games can vary widely. A simple game that botworld lends itself to easily is a knapsack game, in which players attempt to maximize the value of the items collected by robots which they control. (This is an NP-hard problem in general.)
+Botworld games can vary widely. A simple game that Botworld lends itself to easily is a knapsack game, in which players attempt to maximize the value of the items collected by robots which they control. (This is an NP-hard problem in general.)
 
 Remember that \emph{robots are not players}: a player may only be able to specify the initial program for a single robot, but players may well attempt to acquire whole fleets of robots with code distributed throughout.
 
-As such, botworld games are not scored according to the possessions of any particular robot. Rather, each player is assigned a \emph{home square}, and the score of a player is computed according to the items possessed by all robots in the player's home square at the end of the game. (The robots are airlifted out and their items are extracted for delivery to the player.) Thus, a game configuration also needs to assign specific values to the various items.
+As such, Botworld games are not scored according to the possessions of any particular robot. Rather, each player is assigned a \emph{home square}, and the score of a player is computed according to the items possessed by all robots in the player's home square at the end of the game. (The robots are airlifted out and their items are extracted for delivery to the player.) Thus, a game configuration also needs to assign specific values to the various items.
 
 Formally, we define a game configuration as follows:
 
@@ -680,7 +680,7 @@ points r = (\value -> sum (map value $ inventory r)) <$> asks valuer
 Then we can compute the total score in any particular square:
 
 \begin{code}
-score :: BotWorld -> Position -> Reader GameConfig Int
+score :: Botworld -> Position -> Reader GameConfig Int
 score g = maybe (return 0) (fmap sum . mapM points . robotsIn) . at g
 \end{code}
 
@@ -692,9 +692,9 @@ Botworld allows us to study self-modifying agents in a world where the agents ar
 
 Botworld provides a very concrete environment in which to envision agents. This has proved quite useful when considering obstacles of self-reference: the concrete model often makes it easier to envision difficulties and probe edge cases.
 
-Furthermore, botworld allows us to constructively illustrate issues that we come across by providing a concrete game in which the issue presents itself. This can often help make the abstract problems of self-reference easier to visualize.
+Furthermore, Botworld allows us to constructively illustrate issues that we come across by providing a concrete game in which the issue presents itself. This can often help make the abstract problems of self-reference easier to visualize.
 
-Forthcoming papers will illustrate some of the discoveries that we've made using botworld.
+Forthcoming papers will illustrate some of the discoveries that we've made using Botworld.
 
 \newpage
 \begin{appendices}
@@ -703,7 +703,7 @@ Forthcoming papers will illustrate some of the discoveries that we've made using
 
 This report uses a quick-and-dirty |Grid| implementation wherein a grid is represented by a flat list of cells. This grid implementation specifies a wraparound grid (pacman style), which means that every position is valid.
 
-Botworld is not tied to this particular grid implementation: non-wrapping grids, infinite grids, or even non-euclidean grids could house botworld games. We require only that squares agree on who their neighbors are: if square A is north of square B, then square B must be south of square A.
+Botworld is not tied to this particular grid implementation: non-wrapping grids, infinite grids, or even non-euclidean grids could house Botworld games. We require only that squares agree on who their neighbors are: if square A is north of square B, then square B must be south of square A.
 
 \begin{code}
 type Dimensions = (Int, Int)
@@ -749,10 +749,10 @@ towards d (x, y) = (x + dx, y + dy) where
 
 \subsection{Botworld Grids}
 
-Finally, we define a function that updates an entire botworld grid by one step:
+Finally, we define a function that updates an entire Botworld grid by one step:
 
 \begin{code}
-update :: BotWorld -> BotWorld
+update :: Botworld -> Botworld
 update g = g{cells=map doStep $ indices g} where
   doStep pos = flip step (fellows pos) <$> at g pos
   fellows pos = map (walk pos) [N ..]
@@ -874,7 +874,7 @@ runFor n (r:rs) = tick >>= runFor (pred n) where
 
 \subsection{Robot/machine interactions}
 
-Aside from executing robot machines, there are three ways that botworld changes a robot's register machines:
+Aside from executing robot machines, there are three ways that Botworld changes a robot's register machines:
 
 \paragraph{A robot may have its machine written.} This happens whenever the machine is constructed.
 
@@ -898,7 +898,7 @@ takeOutput robot = maybe (robot, Nothing) go (m !!? 2) where
   m = memory robot
 \end{code}
 
-\paragraph{A robot may have its machine input register set.} This happens just before the machine is executed in every botworld step.
+\paragraph{A robot may have its machine input register set.} This happens just before the machine is executed in every Botworld step.
 
 \begin{code}
 setInput :: Encodable i => Robot -> i -> Robot
@@ -1086,7 +1086,7 @@ instance Encodable Action where
 
 \section{Helper Functions} \label{app:helpers}
 
-This section contains simple helper functions used to implement the botworld step function. Three are used to distinguish different types of items, and one is used to distinguish a specific type of action:
+This section contains simple helper functions used to implement the Botworld step function. Three are used to distinguish different types of items, and one is used to distinguish a specific type of action:
 
 \begin{code}
 isPart :: Item -> Bool
@@ -1152,9 +1152,9 @@ dropN _ _ [] = []
 
 \section{Visualization} \label{app:visualization}
 
-The remaining code implements a visualizer for botworld grids. This allows you to print out botworld grids and botworld scoreboards (assuming that you have access to a botworld game configuration).
+The remaining code implements a visualizer for Botworld grids. This allows you to print out Botworld grids and Botworld scoreboards (assuming that you have access to a Botworld game configuration).
 
-In botworld grid visualizations, colors are given a three-letter code:
+In Botworld grid visualizations, colors are given a three-letter code:
 
 \begin{code}
 instance Show Color where
@@ -1172,7 +1172,7 @@ Each cell is shown using three lines: the first for items, the second for item w
 
 \savecolumns
 \begin{code}
-visualize :: BotWorld -> Reader GameConfig String
+visualize :: Botworld -> Reader GameConfig String
 visualize g = do
   rowStrs <- mapM showRow rows :: Reader GameConfig [String]
   return $ concat rowStrs ++ line
@@ -1249,7 +1249,7 @@ Items are crudely shown as follows:
 Finally, the scoreboard function takes a game configuration and prints out a scoreboard detailing the scores of each player (broken down according to the robots in the player's home square at the end of the game).
 
 \begin{code}
-scoreboard :: BotWorld -> Reader GameConfig String
+scoreboard :: Botworld -> Reader GameConfig String
 scoreboard g = do
   scores <- mapM scoreCell =<< sortedPositions
   return $ unlines $ concat scores

@@ -1,14 +1,14 @@
-BotWorld.pdf: BotWorld.tex
-	pdflatex BotWorld.tex >/dev/null
-	pdflatex BotWorld.tex >/dev/null
+Botworld.pdf: Botworld.tex
+	pdflatex Botworld.tex >/dev/null
+	pdflatex Botworld.tex >/dev/null
 
-BotWorld.tex: BotWorld.lhs
-	lhs2TeX -o BotWorld.tex BotWorld.lhs
+Botworld.tex: Botworld.lhs
+	lhs2TeX -o Botworld.tex Botworld.lhs
 
 .PHONY: clean cleanall
 clean:
-	rm -rf BotWorld.tex BotWorld.aux BotWorld.log BotWorld.ptb BotWorld.toc
+	rm -rf Botworld.tex Botworld.aux Botworld.log Botworld.ptb Botworld.toc
 
 cleanall:
 	make clean
-	rm -rf BotWorld.pdf
+	rm -rf Botworld.pdf
