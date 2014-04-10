@@ -456,7 +456,7 @@ Build commands must also pass three checks in order to succeed:
       tryBuild = maybe Invalid checkBuild . construct
       checkBuild blueprint
           | any (contested !!) is = BuildInterrupted is
-          | otherwise = Built is (setState m blueprint)
+          | otherwise = Built is $ setState m blueprint
 \end{code}
 
 Pass commands always succeed.
