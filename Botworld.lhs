@@ -453,9 +453,10 @@ Build commands must also pass three checks in order to succeed:
 \restorecolumns
 \begin{code}
     act (Build is m) = maybe Invalid tryBuild $ mapM (itemsIn sq !!?) is where
-      tryBuild items
-        | any (contested !!) is = BuildInterrupted is
-        | otherwise = maybe Invalid (Built is . setState m) (construct items)
+      tryBuild = maybe Invalid checkBuild . construct
+      checkBuild blueprint
+          | any (contested !!) is = BuildInterrupted is
+          | otherwise = Built is (setState m blueprint)
 \end{code}
 
 Pass commands always succeed.
