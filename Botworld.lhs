@@ -528,8 +528,7 @@ With this we can compute the list of items that fall from destroyed robots, give
 \restorecolumns
 \begin{code}
   fallen :: [([Item], [Item])]
-  fallen = [itemsOf r | (r, False) <- zip veterans survived] where
-    itemsOf r = (shatter r, filter (not . isShield) (inventory r))
+  fallen = [(shatter r, inventory r) | (r, False) <- zip veterans survived]
 \end{code}
 
 We retain some structure in the list of fallen items which will be made visible to surviving robots in their program input.
