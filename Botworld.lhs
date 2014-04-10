@@ -259,7 +259,7 @@ data Action
   | MoveBlocked Direction
   | MovedOut Direction
   | MovedIn Direction
-  | CannotFit Int
+  | CannotLift Int
   | GrappledOver Int
   | Lifted Int
   | Dropped Item
@@ -300,12 +300,12 @@ Notice that we read the robot's output register at the beginning of each Botworl
 
 Before we can compute the actions that are actually taken by each robot, we need to compute some data that will help us identify failed actions.
 
-\paragraph{Items may only be lifted or used to build robots if no other robot is also validly lifting or using the item.} In order to detect such conflicts, we generate a list of items which corresponds by index to the cell's item list, except with contested items missing.
+\paragraph{Items may only be lifted or used to build robots if no other robot is also validly lifting or using the item.} In order to detect such conflicts, we compute whether each individual item is contested, and store the result in a list of items which corresponds by index to the cell's item list.
 
 \restorecolumns
 \begin{code}
-  itemTargets :: [Maybe Item]
-  itemTargets = map contest [0..length $ itemsIn sq] where
+  contested :: [Bool]
+  contested = map isContested [0..length $ itemsIn sq] where
 \end{code}
 
 We determine the indices of items that robots want to lift by looking at all lift orders that the ordering robot could in fact carry out:\footnote{The following code introduces the helper function |(!!?) :: [a] -> Int -> Maybe a|, used to safely index into lists, which is defined in Appendix~\ref{app:helpers}.}
@@ -329,7 +329,7 @@ We may then determine which items are in high demand, and generate our item list
 \restorecolumns
 \begin{code}
     uses = allLifts ++ concat allBuilds
-    contest i = if i `elem` delete i uses then Nothing else itemsIn sq !!? i
+    isContested i = i `elem` delete i uses
 \end{code}
 
 \paragraph{Robots may only be destroyed or inspected if they do not possess adequate shields.} Every attack (|Destroy| or |Inspect| command) targeting a robot destroys one of the robot's shields. So long as the robot possesses more shields than attackers, the robot is not affected. However, if the robot is attacked by more robots than it has shields, then all of its shields are destroyed \emph{and} all of the attacks succeed (in a wild frenzy, presumably).
@@ -396,9 +396,11 @@ Otherwise, the lift succeeds.
 
 \restorecolumns
 \begin{code}
-    act (Lift i) = maybe Invalid tryLift $ itemTargets !!? i where
-      tryLift = maybe (GrappledOver i) pickUp
-      pickUp item = (if canLift robot item then Lifted else CannotFit) i
+    act (Lift i) = maybe Invalid tryLift $ itemsIn sq !!? i where
+      tryLift item
+        | not $ canLift robot item = CannotLift i
+        | contested !! i = GrappledOver i
+        | otherwise = CannotLift i
 \end{code}
 
 |Drop| commands always succeed so long as the robot actually possesses the item they attempt to drop.
@@ -450,10 +452,10 @@ Build commands must also pass three checks in order to succeed:
 
 \restorecolumns
 \begin{code}
-    act (Build is m) = maybe Invalid tryBuild parts where
-      parts = mapM (itemTargets !!?) is
-      tryBuild = maybe (BuildInterrupted is) buildUsing . sequence
-      buildUsing = maybe Invalid (Built is . initialize m) . construct
+    act (Build is m) = maybe Invalid tryBuild $ mapM (itemsIn sq !!?) is where
+      tryBuild items
+        | any (contested !!) is = BuildInterrupted is
+        | otherwise = maybe Invalid (Built is . setState m) (construct items)
 \end{code}
 
 Pass commands always succeed.
@@ -894,8 +896,8 @@ Aside from executing robot machines, there are three ways that Botworld changes 
 \paragraph{A robot may have its machine written.} This happens whenever the machine is constructed.
 
 \begin{code}
-initialize :: Memory -> Robot -> Robot
-initialize m robot = robot{memory=fitted} where
+setState :: Memory -> Robot -> Robot
+setState m robot = robot{memory=fitted} where
   fitted = zipWith (forceR . contents) m (memory robot) ++ padding
   padding = map (forceR Nil) (drop (length m) (memory robot))
 \end{code}
@@ -1084,7 +1086,7 @@ instance Encodable Action where
     MoveBlocked d        -> encode (4  :: Int, direction d)
     MovedOut d           -> encode (2  :: Int, direction d)
     MovedIn d            -> encode (3  :: Int, direction d)
-    CannotFit i          -> encode (6  :: Int, i)
+    CannotLift i         -> encode (6  :: Int, i)
     GrappledOver i       -> encode (7  :: Int, i)
     Lifted i             -> encode (5  :: Int, i)
     Dropped _            -> encode (8  :: Int, Nil)
