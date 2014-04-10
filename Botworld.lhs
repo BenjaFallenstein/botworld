@@ -337,7 +337,7 @@ To implement this behavior, we generate first a list corresponding by index to t
 \restorecolumns
 \begin{code}
   attacks :: [Int]
-  attacks = map numAttacks [0..] where
+  attacks = map numAttacks [0..length $ robotsIn sq] where
     numAttacks i = length $ filter (== i) allAttacks
     allAttacks = mapMaybe (getAttack =<<) intents
     getAttack (Inspect i) = Just i
