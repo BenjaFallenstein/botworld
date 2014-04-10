@@ -1,4 +1,4 @@
-\documentclass[a4paper]{article}
+\documentclass{report}
 %include polycode.fmt
 
 \usepackage{listings}
@@ -16,17 +16,16 @@
 
 \title{Botworld 1.0\\(Technical Report)}
 
-\author{Nate Soares, Benja Fallenstein}
+\author{Nate Soares,\; Benja Fallenstein\\[0.4em]Machine Intelligence Research Institute\\2030 Addison St.\ \#300\\Berkeley, CA 94704, USA\\[0.4em]{\tt \{nate,benja\}@@intelligence.org}}
 
-\date{\today}
+\date{April 10, 2014}
 
 \begin{document}
 \maketitle
 
 \tableofcontents
-\newpage
 
-\section{Motivation}
+\chapter{Introduction}
 
 This report introduces \emph{Botworld}, a cellular automaton used for studying self-modifying agents.
 
@@ -87,7 +86,7 @@ Like any cellular automaton, Botworld updates in discrete \emph{steps} which app
 
 These rules allow for a wide variety of games, from NP-hard knapsack packing games to difficult Newcomb-like games such as a variant of the Parfit's hitchhiker problem (wherein a robot will drop a valuable item only if it, after simulating your robot, concludes that your robot will give it a less valuable item).
 
-\section{Implementation}
+\chapter{Implementation}
 
 This report is a literate Haskell file, so we must begin the code with the module definition and the Haskell imports.
 
@@ -128,7 +127,7 @@ type Botworld = Grid Cell
 
 We do not mean to tie the specification of Botworld to any particular grid implementation: Botworld grids may be finite or infinite, wrapping (pacman style) or non-wrapping. The specific implementation used in this report is somewhat monotonous, and may be found in Appendix~\ref{app:grid}.
 
-\subsection{Robots}
+\section{Robots}
 
 Each robot can be visualized as a little metal construct on wheels, with a little camera on the front, lifter-arms on the sides, a holding area atop, and a register machine ticking away deep within.
 
@@ -170,7 +169,7 @@ type Memory = [Register]
 
 In this report, the register machines use a very simple instruction set which we call the \emph{constree language}. A full implementation can be found in Appendix~\ref{app:constree}. However, when modelling concrete decision problems in Botworld, we may choose to replace this simple language by something easier to use. (In particular, many robot programs will need to reason about Botworld's laws. Encoding Botworld into the constree language is no trivial task.)
 
-\subsection{Items}
+\section{Items}
 
 Botworld squares contain \emph{items} which may be manipulated by the robots. Items include \emph{robot parts} which can be used to construct robots, and \emph{shields} which can be used to protect a robot from aggressors, and various types of \emph{cargo}, a catch-all term for items that have no functional significance inside Botworld but that players try to collect to increase their score.
 
@@ -218,7 +217,7 @@ shatter r = FramePart (frame r) : ProcessorPart (processor r) : rparts where
   rparts = map (RegisterPart . forceR Nil) (memory r)
 \end{code}
 
-\subsection{Commands and actions}
+\section{Commands and actions}
 
 Robot machines have a special \emph{output register} which is used to determine the action taken by the robot in the step. Robot machines are run at the \emph{end} of each Botworld step, and are expected to leave a command in the output register. This command determines the behavior of the robot in the following step.
 
@@ -272,7 +271,7 @@ data Action
 
 \end{code}
 
-\subsection{The step function}
+\section{The step function}
 
 Botworld cells are updated given only the current state of the cell and the states of all surrounding cells. Wall cells are immutable, and thus we need only define the step function on squares.
 
@@ -525,11 +524,11 @@ We also determine the list of robots that have been created in this timestep:
 All remaining robots will have their register machines run before the next step. Before they may be run, however, their input registers must be updated. Each robot recieves five inputs:
 
 \begin{enumerate*}
-\item The host robot's index in the following list
-\item The list of all robots in the square, including robots that exited, entered, were destroyed, and were created.
-\item A list of actions for each robot, corresponding to the list above.
-\item The updated item list>
-\item Some private input.
+  \item The host robot's index in the following list
+  \item The list of all robots in the square, including robots that exited, entered, were destroyed, and were created.
+  \item A list of actions for each robot, corresponding to the list above.
+  \item The updated item list>
+  \item Some private input.
 \end{enumerate*}
 
 We have already largely computed the list of all robots. It is worth noting here that when this robot list is converted into machine input, some information will be lost: processors and memories are not visible to other robots (except via |Inspect| commands). This data-hiding is implemented by the constree encoding code; see Appendix~\ref{app:encoding} for details.
@@ -655,7 +654,7 @@ This fully specifies the step function for Botworld cells. To reiterate:
   \item The updated item list is constructed.
 \end{enumerate*}
 
-\subsection{Games} \label{sec:games}
+\section{Games} \label{sec:games}
 
 Botworld games can vary widely. A simple game that Botworld lends itself to easily is a knapsack game, in which players attempt to maximize the value of the items collected by robots which they control. (This is an NP-hard problem in general.)
 
@@ -688,7 +687,7 @@ score g = maybe (return 0) (fmap sum . mapM points . robotsIn) . at g
 
 We do not provide any example games in this report. Some example games are forthcoming.
 
-\section{Concluding notes}
+\chapter{Concluding notes}
 
 Botworld allows us to study self-modifying agents in a world where the agents are embedded \emph{within} the environment. Botworld admits a wide variety of games, including games with Newcomb-like problems and games with NP-hard tasks.
 
@@ -698,13 +697,9 @@ Furthermore, Botworld allows us to constructively illustrate issues that we come
 
 Forthcoming papers will illustrate some of the discoveries that we've made using Botworld.
 
-\bibliography{Botworld}{}
-\bibliographystyle{plain}
-
-\newpage
 \begin{appendices}
 
-\section{Grid Manipulation} \label{app:grid}
+\chapter{Grid Manipulation} \label{app:grid}
 
 This report uses a quick-and-dirty |Grid| implementation wherein a grid is represented by a flat list of cells. This grid implementation specifies a wraparound grid (pacman style), which means that every position is valid.
 
@@ -735,7 +730,7 @@ generate :: Dimensions -> (Position -> a) -> Grid a
 generate dim gen = let g = Grid dim (map gen $ indices g) in g
 \end{code}
 
-\subsection{Directions}
+\section{Directions}
 
 Each square has eight neighbors (or up to eight neighbors, in finite non-wrapping grids). Each neighbor lies in one of eight directions, termed according to the cardinal directions. We now formally name those directions and specify how directions alter grid positions.
 
@@ -752,7 +747,7 @@ towards d (x, y) = (x + dx, y + dy) where
   dy = [-1, -1, 0, 1, 1, 1, 0, -1] !! fromEnum d
 \end{code}
 
-\subsection{Botworld Grids}
+\section{Botworld Grids}
 
 Finally, we define a function that updates an entire Botworld grid by one step:
 
@@ -764,7 +759,7 @@ update g = g{cells=map doStep $ indices g} where
   walk p d = (d, at g $ towards d p)
 \end{code}
 
-\section{Constree Language} \label{app:constree}
+\chapter{Constree Language} \label{app:constree}
 
 Robots contain register machines, which run a little Turing complete language which we call the \emph{constree language}. There is only one data structure in constree, which is (unsurprisingly) the cons tree:
 
@@ -877,7 +872,7 @@ runFor n (r:rs) = tick >>= runFor (pred n) where
   doInstruction (i, is) = execute i (r{contents=is} : rs)
 \end{code}
 
-\subsection{Robot/machine interactions}
+\section{Robot/machine interactions}
 
 Aside from executing robot machines, there are three ways that Botworld changes a robot's register machines:
 
@@ -911,7 +906,7 @@ setInput robot i = robot{memory=set1} where
   set1 = alter 1 (fitR i) (memory robot)
 \end{code}
 
-\subsection{Encoding and Decoding} \label{app:encoding}
+\section{Encoding and Decoding} \label{app:encoding}
 
 The following section specifies how haskell data structures are encoded into constrees and decoded from constrees. It is largely mechanical, with a few exceptions noted inline.
 
@@ -1089,7 +1084,7 @@ instance Encodable Action where
     where direction d = head $ elemIndices d [N ..]
 \end{code}
 
-\section{Helper Functions} \label{app:helpers}
+\chapter{Helper Functions} \label{app:helpers}
 
 This section contains simple helper functions used to implement the Botworld step function. Three are used to distinguish different types of items, and one is used to distinguish a specific type of action:
 
@@ -1155,7 +1150,7 @@ dropN _ _ [] = []
 \end{code}
 
 
-\section{Visualization} \label{app:visualization}
+\chapter{Visualization} \label{app:visualization}
 
 The remaining code implements a visualizer for Botworld grids. This allows you to print out Botworld grids and Botworld scoreboards (assuming that you have access to a Botworld game configuration).
 
@@ -1286,5 +1281,8 @@ scoreboard g = do
 \end{code}
 
 \end{appendices}
+
+\bibliography{Botworld}{}
+\bibliographystyle{plain}
 
 \end{document}
