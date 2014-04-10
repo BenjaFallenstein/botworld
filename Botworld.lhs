@@ -400,7 +400,7 @@ Otherwise, the lift succeeds.
       tryLift item
         | not $ canLift robot item = CannotLift i
         | contested !! i = GrappledOver i
-        | otherwise = CannotLift i
+        | otherwise = Lifted i
 \end{code}
 
 |Drop| commands always succeed so long as the robot actually possesses the item they attempt to drop.
