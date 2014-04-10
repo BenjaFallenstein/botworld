@@ -81,6 +81,14 @@ Like any cellular automaton, Botworld updates in discrete \emph{steps} which app
 
 These rules allow for a wide variety of games, from NP-hard knapsack packing games to difficult Newcomb-like games such as a variant of the Parfit's hitchhiker problem (wherein a robot will drop a valuable item only if it, after simulating your robot, concludes that your robot will give it a less valuable item).
 
+\section{Cartesianism in Botworld}
+
+Though we have stated that we mean to study non-Cartesian formalizations of intelligence, Botworld does in fact have a ``Cartesian'' boundary. The robot parts are fundamental objects, the machine registers are non-reducible. The important property of Botworld is not that it lacks a Cartesian boundary, but that the boundary is \emph{breakable}.
+
+Our model is not realistic, but it is simple to reason about. For all that the robot machines are not reducible, the robots are still embedded in their environment, and they can still be read or destroyed by other agents. Though the internal state of their machines is not implemented in the world, it can still affect the world. While our model is dualistic, we hope that it captures some of the complexity of naturalistic agents.
+
+In creating Botworld we tried to build something implementable by a smaller system, such as Conway's \emph{Game of Life}~\cite{life}. It is useful to imagine such an implementation when considering Botworld games. Future versions of Botworld may treat the robot bodies as less fundamental objects. In the meantime, we hoe that it is possible to picture an implementation where the Cartesian boundary is much less fundamental, and to use Botworld to gain useful insights about agents embedded within their environment.
+
 \chapter{Implementation}
 
 This report is a literate Haskell file, so we must begin the code with the module definition and the Haskell imports.
