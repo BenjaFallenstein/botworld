@@ -296,6 +296,8 @@ step sq neighbors = Square robots' items' where
 
 Notice that we read the robot's output register at the beginning of each Botworld step. (We run the robot register machines at the end of each step.) This means that robots must be initialized with their first command in the output register.
 
+\subsection{Resolving conflicts}
+
 Before we can compute the actions that are actually taken by each robot, we need to compute some data that will help us identify failed actions.
 
 \paragraph{Items may only be lifted or used to build robots if no other robot is also validly lifting or using the item.} In order to detect such conflicts, we generate a list of items which corresponds by index to the cell's item list, except with contested items missing.
@@ -362,6 +364,8 @@ We then generate a list corresponding by index to the robot list which for each 
   fled (Just (Move dir)) = isJust $ join $ lookup dir neighbors
   fled _ = False
 \end{code}
+
+\subsection{Determining actions}
 
 We may now map robot commands onto the actions that the robots actually take. We begin by noting that any robot with invalid output takes the |Invalid| action.
 
@@ -467,6 +471,8 @@ With the |resolve| function in hand it is trivial to compute the actions actuall
   localActions = zipWith resolve robots intents
 \end{code}
 
+\subsection{Updating robots}
+
 With this data we can determine which robots left the square and which robots were destroyed. It is convenient to know, for each robot which began in this square, whether that robot is still in this square and (if they are) whether they survived. We store that data in the following list (which corresponds by index to the original robot list):
 
 \restorecolumns
@@ -526,17 +532,7 @@ We also determine the list of robots that have been created in this timestep:
   children = [r | Built _ r <- localActions]
 \end{code}
 
-All remaining robots will have their register machines run before the next step. Before they may be run, however, their input registers must be updated. Each robot receives five inputs:
-
-\begin{enumerate*}
-  \item The host robot's index in the following list.
-  \item The list of all robots in the square, including robots that exited, entered, were destroyed, and were created.
-  \item A list of actions for each robot, corresponding to the list above.
-  \item The updated item list.
-  \item Some private input.
-\end{enumerate*}
-
-We have already largely computed the list of all robots. It is worth noting here that when this robot list is converted into machine input, some information will be lost: processors and memories are not visible to other robots (except via |Inspect| commands). This data-hiding is implemented by the constree encoding code; see Appendix~\ref{app:encoding} for details.
+This allows us to compute a list of all robots that either started in the square, entered the square, or were created in the square in this step. Note that this list also contains robots that exited the square and robots that have been destroyed. This is intentional: the list of all robots (and what happened to them) is sent to each remaining robot as program input.
 
 \restorecolumns
 \begin{code}
@@ -544,19 +540,9 @@ We have already largely computed the list of all robots. It is worth noting here
   allRobots = veterans ++ travelers ++ children
 \end{code}
 
-Computing the list of all actions is similarly simple. As with the robot list, some of this data will be lost when it is converted into machine input. Specifically, robots cannot distinguish between |Passed| and |Invalid| actions. Also, the results of an |Inspect| command are visible only to the inspecting robot. Again, this data-hiding is implemented by the constree encoding code; see Appendix~\ref{app:encoding} for details.
+\subsection{Updating Items}
 
-\restorecolumns
-\begin{code}
-  allActions :: [Action]
-  allActions = localActions ++ travelerActions ++ childActions where
-    travelerActions = map MovedIn origins
-    childActions = replicate (length children) Created
-\end{code}
-
-We now compute the item list. It is given in three groups.
-
-The items that were unaffected:
+We now compute the updated item list. It is given in three groups. The items that were unaffected:
 
 \restorecolumns
 \begin{code}
@@ -566,7 +552,7 @@ The items that were unaffected:
     builds = [is | Built is _ <- localActions]
 \end{code}
 
-The items that were willingly dropped by robots:
+the items that were willingly dropped by robots:
 
 \restorecolumns
 \begin{code}
@@ -574,7 +560,7 @@ The items that were willingly dropped by robots:
   dropped = [item | Dropped item <- localActions]
 \end{code}
 
-And the fallen items from destroyed robots, which is given in groups of part/inventory pairs:
+and the fallen items from destroyed robots, which is given in groups of part/inventory pairs:
 
 \restorecolumns
 \begin{code}
@@ -583,9 +569,39 @@ And the fallen items from destroyed robots, which is given in groups of part/inv
     itemsOf r = (shatter r, filter (not . isShield) (inventory r))
 \end{code}
 
-The item list retains some structure when it is encoded as robot input, which helps robots determine what happened to which items.
+We retain some structure in the list of fallen items, because this structure will be preserved in the robot program inputs. However, the item list in the updated version of the square is generated from these three lists \emph{without} any additional structure:
 
-The final piece of robot input is private. If the robot executed a successful |Inspect| command then the private input includes information about the inspected robot's machine.
+\restorecolumns
+\begin{code}
+  items' :: [Item]
+  items' = unaffected ++ dropped ++ concat [xs ++ ys | (xs, ys) <- fallen]
+\end{code}
+
+\subsection{Running robots}
+
+All robots that remain in the square (and were not destroyed) will have their register machines run before the next step. Before they may be run, however, their input registers must be updated. Each robot receives five inputs:
+
+\begin{enumerate*}
+  \item The host robot's index in the following list.
+  \item The list of all robots in the square, including robots that exited, entered, were destroyed, and were created.
+  \item A list of actions for each robot, corresponding to the list above.
+  \item The updated item list, with some additional structure.
+  \item Some private input.
+\end{enumerate*}
+
+We have already computed the list of all robots. It is worth noting here that when this robot list is converted into machine input, some information will be lost: processors and memories are not visible to other robots (except via |Inspect| commands). This data-hiding is implemented by the constree encoding code; see Appendix~\ref{app:encoding} for details.
+
+We next compute the list of actions corresponding to the list of robots. As with the robot list, some of this data will be lost when it is converted into machine input. Specifically, robots cannot distinguish between |Passed| and |Invalid| actions. Also, the results of an |Inspect| command are visible only to the inspecting robot. Again, this data-hiding is implemented by the constree encoding code; see Appendix~\ref{app:encoding} for details.
+
+\restorecolumns
+\begin{code}
+  allActions :: [Action]
+  allActions = localActions ++ travelerActions ++ childActions where
+    travelerActions = map MovedIn origins
+    childActions = replicate (length children) Created
+\end{code}
+
+Finally, we compute the private input. If the robot executed a successful |Inspect| command then the private input includes information about the inspected robot's machine.
 
 Also, the private input differentiates between |Invalid| and |Passed| actions in a private fashion, so that each individual machine can know whether \emph{it itself} gave an invalid command in the previous step. (All other robots cannot distinguish between |Invalid| and |Passed| actions.)
 
@@ -628,7 +644,7 @@ We can look this data up in the |survived| list created previously, remembering 
   present = maybe True (fromMaybe False) . (survived !!?)
 \end{code}
 
-We then construct the new robot list by running all present robots.
+Finally, we construct the new robot list by running all present robots.
 
 \restorecolumns
 \begin{code}
@@ -637,13 +653,7 @@ We then construct the new robot list by running all present robots.
     triples = zip3 [0..] allActions allRobots
 \end{code}
 
-It remains only to specify the updated item list. This is the same as the updated item list that was passed to the robots as input, with the additional structure removed.
-
-\restorecolumns
-\begin{code}
-  items' :: [Item]
-  items' = unaffected ++ dropped ++ concat [xs ++ ys | (xs, ys) <- fallen]
-\end{code}
+\subsection{Summary}
 
 This fully specifies the step function for Botworld cells. To reiterate:
 
