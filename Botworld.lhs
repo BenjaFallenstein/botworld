@@ -262,7 +262,7 @@ data Action
   | CannotLift Int
   | GrappledOver Int
   | Lifted Int
-  | Dropped Item
+  | Dropped Int
   | InspectTargetFled Int
   | InspectBlocked Int
   | Inspected Int Robot
@@ -407,7 +407,7 @@ Otherwise, the lift succeeds.
 
 \restorecolumns
 \begin{code}
-    act (Drop i) = maybe Invalid Dropped (inventory robot !!? i)
+    act (Drop i) = maybe Invalid (const $ Dropped i) (inventory robot !!? i)
 \end{code}
 
 |Inspect| commands, like |Lift| commands, may fail in three different ways:
@@ -473,21 +473,26 @@ With the |resolve| function in hand it is trivial to compute the actions actuall
   localActions = zipWith resolve robots intents
 \end{code}
 
-\subsection{Updating robots}
+\subsection{Updating items and robots}
 
-With this data we can determine which robots left the square and which robots were destroyed. It is convenient to know, for each robot which began in this square, whether that robot is still in this square and (if they are) whether they survived. We store that data in the following list (which corresponds by index to the original robot list):
+With the local actions in hand, we can start computing the new robot and item lists. We begin by computing which items were unaffected and which items were willingly dropped.
 
 \restorecolumns
 \begin{code}
-  survived :: [Maybe Bool]
-  survived = zipWith check [0..] localActions where
-    check _ (MovedOut _) = Nothing
-    check n _ = Just $ n `notElem` [i | Destroyed i <- localActions]
+  unaffected :: [Item]
+  unaffected = removeIndices (lifts ++ concat builds) (itemsIn sq) where
+    lifts = [i | Lifted i <- localActions]
+    builds = [is | Built is _ <- localActions]
+
+  dropped :: [Item]
+  dropped = [inventory r !! i | (r, Dropped i) <- zip robots localActions]
 \end{code}
 
-We then compute the updated inventories of all robots who began in this square. (The inventories of moving robots are not changed, so we need not update the inventory of robots entering this square.)
+We cannot yet compute the new item list entirely, as doing so requires knowledge of which robots were destroyed. The items and parts of destroyed robots will fall into the square, but only \emph{after} the destroyed robot carries out their action.
 
-Robot inventories are updated whenever the robot executes a |Lift| action, executes a |Drop| action, or experiences an attack (in which case shields may be destroyed.) Notice that shields are destroyed in order according to the ordering of the targeted robot's inventory.\footnote{The following code introduces the helper function |dropN :: Int -> (a -> Bool) -> [a] -> [a]|, which drops the first |n| items matching the given predicate. It is defined in Appendix~\ref{app:helpers}.}
+We now turn to robots that began in the square, and update their inventories. (Note that because the inventories of moving robots cannot change, we do not need to update the inventories of robots entering the square.)
+
+Robot inventories are updated whenever the robot executes a |Lift| action, executes a |Drop| action, or experiences an attack (in which case shields may be destroyed.)\footnote{The following code introduces the helper function |dropN :: Int -> (a -> Bool) -> [a] -> [a]|, which drops the first |n| items matching the given predicate. It is defined in Appendix~\ref{app:helpers}.}
 
 \restorecolumns
 \begin{code}
@@ -495,7 +500,7 @@ Robot inventories are updated whenever the robot executes a |Lift| action, execu
   updateInventory i a r = case a of
     MovedOut _ -> r
     Lifted n -> r{inventory=(itemsIn sq !! n) : defended}
-    Dropped item -> r{inventory=delete item defended}
+    Dropped n -> r{inventory=delete (inventory r !! n) defended}
     _ -> r{inventory=defended}
     where defended = dropN (attacks !! i) isShield $ inventory r
 \end{code}
@@ -508,7 +513,35 @@ We use this function to update the inventories of all robots that were originall
   veterans = zipWith3 updateInventory [0..] localActions robots
 \end{code}
 
-Next, we identify which robots enter this square from other squares. We compute this by looking at the intents of the robots in neighboring squares. Remember that move commands always succeed if the robot is moving into a non-wall square. Thus, all robots in neighboring squares which intend to move into this square will successfully move into this square.
+Now that we know the updated states of the robots, we can compute what items fall from the destroyed robots. In order to do this, we need to know which robots were destroyed. We compute whether each robot was destroyed and store the data in a list which corresponds by index to the original robot list.
+
+\restorecolumns
+\begin{code}
+  survived :: [Bool]
+  survived = map isAlive [0..] where
+    isAlive n = n `notElem` [i | Destroyed i <- localActions]
+\end{code}
+
+With this we can compute the list of items that fall from destroyed robots, given in part/inventory pairs.
+
+\restorecolumns
+\begin{code}
+  fallen :: [([Item], [Item])]
+  fallen = [itemsOf r | (r, False) <- zip veterans survived] where
+    itemsOf r = (shatter r, filter (not . isShield) (inventory r))
+\end{code}
+
+We retain some structure in the list of fallen items which will be made visible to surviving robots in their program input.
+
+This is the last piece of data that we need to compute the updated item list in the square, which is just the |unaffected|, |dropped|, and |fallen| boxes without the additional structure:
+
+\restorecolumns
+\begin{code}
+  items' :: [Item]
+  items' = unaffected ++ dropped ++ concat [xs ++ ys | (xs, ys) <- fallen]
+\end{code}
+
+Computing the updated robot list is somewhat more difficult. Before we can, we must identify which robots enter this square from other squares. We compute this by looking at the intents of the robots in neighboring squares. Remember that move commands always succeed if the robot is moving into a non-wall square. Thus, all robots in neighboring squares which intend to move into this square will successfully move into this square.
 
 \restorecolumns
 \begin{code}
@@ -540,43 +573,6 @@ This allows us to compute a list of all robots that either started in the square
 \begin{code}
   allRobots :: [Robot]
   allRobots = veterans ++ travelers ++ children
-\end{code}
-
-\subsection{Updating Items}
-
-We now compute the updated item list. It is given in three groups. The items that were unaffected:
-
-\restorecolumns
-\begin{code}
-  unaffected :: [Item]
-  unaffected = removeIndices (lifts ++ concat builds) (itemsIn sq) where
-    lifts = [i | Lifted i <- localActions]
-    builds = [is | Built is _ <- localActions]
-\end{code}
-
-the items that were willingly dropped by robots:
-
-\restorecolumns
-\begin{code}
-  dropped :: [Item]
-  dropped = [item | Dropped item <- localActions]
-\end{code}
-
-and the fallen items from destroyed robots, which is given in groups of part/inventory pairs:
-
-\restorecolumns
-\begin{code}
-  fallen :: [([Item], [Item])]
-  fallen = [itemsOf r | (r, Just False) <- zip veterans survived] where
-    itemsOf r = (shatter r, filter (not . isShield) (inventory r))
-\end{code}
-
-We retain some structure in the list of fallen items, because this structure will be preserved in the robot program inputs. However, the item list in the updated version of the square is generated from these three lists \emph{without} any additional structure:
-
-\restorecolumns
-\begin{code}
-  items' :: [Item]
-  items' = unaffected ++ dropped ++ concat [xs ++ ys | (xs, ys) <- fallen]
 \end{code}
 
 \subsection{Running robots}
@@ -636,14 +632,14 @@ The register machines are run as described in the following function. It makes u
     Left _ -> robot{memory=map (forceR Nil) (memory robot)}
 \end{code}
 
-We only run robots that both stayed in the square and were not destroyed. We figure out which robots stayed and survived according to their index in the list of all robots.
-
-We can look this data up in the |survived| list created previously, remembering that all indices which don't show up in the list denote robots that either entered or were created (and that all such robots are present).
+We only run robots that both stayed in the square and were not destroyed. We figure out which robots stayed and survived according to their index in the list of all robots. We can figure this out by checking the local action list and the |survived| list defined previously, remembering that all robots that weren't in the original robot list either entered or were created (and that all such robots are present).\footnote{The following code introduces the helper function |isExit :: Action -> Bool|, defined in Appendix~\ref{app:helpers}.}
 
 \restorecolumns
 \begin{code}
   present :: Int -> Bool
-  present = maybe True (fromMaybe False) . (survived !!?)
+  present i = stillAlive i && stillHere i where
+    stillAlive = fromMaybe True . (survived !!?)
+    stillHere = maybe True (not . isExit) . (localActions !!?)
 \end{code}
 
 Finally, we construct the new robot list by running all present robots.
@@ -1089,7 +1085,7 @@ instance Encodable Action where
     CannotLift i         -> encode (6  :: Int, i)
     GrappledOver i       -> encode (7  :: Int, i)
     Lifted i             -> encode (5  :: Int, i)
-    Dropped _            -> encode (8  :: Int, Nil)
+    Dropped i            -> encode (8  :: Int, i)
     InspectTargetFled i  -> encode (9  :: Int, i)
     InspectBlocked i     -> encode (10 :: Int, i)
     Inspected i _        -> encode (11 :: Int, i)
@@ -1103,7 +1099,7 @@ instance Encodable Action where
 
 \chapter{Helper Functions} \label{app:helpers}
 
-This section contains simple helper functions used to implement the Botworld step function. Three are used to distinguish different types of items, and one is used to distinguish a specific type of action:
+This section contains simple helper functions used to implement the Botworld step function. The first few are used to distinguish different types of items and actions:
 
 \begin{code}
 isPart :: Item -> Bool
@@ -1121,9 +1117,15 @@ isFrame _ = False
 isShield :: Item -> Bool
 isShield Shield = True
 isShield _ = False
+
+isExit :: Action -> Bool
+isExit (MovedOut _) = True
+isExit _ = False
 \end{code}
 
-The other four are generic functions that assist with list manipulation: one to extract a single item from a list (or fail if the list has many items):
+The rest are generic functions that assist with list manipulation.
+
+One to extract a single item from a list (or fail if the list has many items):
 
 \begin{code}
 singleton :: [a] -> Maybe a
@@ -1131,7 +1133,7 @@ singleton [x] = Just x
 singleton _ = Nothing
 \end{code}
 
-one to safely access items in a list at a given index:
+One to safely access items in a list at a given index:
 
 \begin{code}
 (!!?) :: [a] -> Int -> Maybe a
@@ -1140,7 +1142,7 @@ one to safely access items in a list at a given index:
 (_:xs) !!? n = xs !!? pred n
 \end{code}
 
-one to safely alter a specific item in a list:
+One to safely alter a specific item in a list:
 
 \begin{code}
 alter :: Int -> (a -> a) -> [a] -> [a]
@@ -1148,7 +1150,7 @@ alter i f xs = maybe xs go (xs !!? i) where
   go x = take i xs ++ (f x : drop (succ i) xs)
 \end{code}
 
-one to remove a specific set of indices from a list:
+One to remove a specific set of indices from a list:
 
 \begin{code}
 removeIndices :: [Int] -> [a] -> [a]
@@ -1157,7 +1159,7 @@ removeIndices = flip $ foldr remove where
   remove i xs = take i xs ++ drop (succ i) xs
 \end{code}
 
-and one to selectively drop the first |n| items that match the given predicate.
+And one to selectively drop the first |n| items that match the given predicate.
 
 \begin{code}
 dropN :: Int -> (a -> Bool) -> [a] -> [a]
@@ -1165,7 +1167,6 @@ dropN 0 _ xs = xs
 dropN n p (x:xs) = if p x then dropN (pred n) p xs else x : dropN n p xs
 dropN _ _ [] = []
 \end{code}
-
 
 \chapter{Visualization} \label{app:visualization}
 
