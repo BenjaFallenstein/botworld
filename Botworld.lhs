@@ -476,7 +476,7 @@ With the |resolve| function in hand it is trivial to compute the actions actuall
 
 \subsection{Updating items and robots}
 
-With the local actions in hand, we can start computing the new robot and item lists. We begin by computing which items were unaffected and which items were willingly dropped.
+With the local actions in hand, we can start computing the new robot and item lists. We begin by computing which items were unaffected and which items were willingly dropped.\footnote{The following code introduces the helper function |removeIndices :: [Int] -> [a] -> [a]| which is defined in Appendix~\ref{app:helpers}.}
 
 \restorecolumns
 \begin{code}
