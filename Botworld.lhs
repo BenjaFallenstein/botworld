@@ -498,12 +498,12 @@ Robot inventories are updated whenever the robot executes a |Lift| action, execu
 \restorecolumns
 \begin{code}
   updateInventory :: Int -> Action -> Robot -> Robot
-  updateInventory i a r = case a of
+  updateInventory i a r = let stale = inventory r in case a of
     MovedOut _ -> r
-    Lifted n -> r{inventory=(itemsIn sq !! n) : defended}
-    Dropped n -> r{inventory=delete (inventory r !! n) defended}
-    _ -> r{inventory=defended}
-    where defended = dropN (attacks !! i) isShield $ inventory r
+    Lifted n -> r{inventory=(itemsIn sq !! n) : defend stale}
+    Dropped n -> r{inventory=defend $ removeIndices [n] stale}
+    _ -> r{inventory=defend stale}
+    where defend = dropN (attacks !! i) isShield
 \end{code}
 
 We use this function to update the inventories of all robots that were originally in this square. Notice that the inventories of destroyed robots are updated as well: destroyed robots get to perform their actions before they are destroyed.
