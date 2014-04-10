@@ -8,6 +8,8 @@
 \usepackage{graphicx}
 \usepackage{appendix}
 \usepackage{mdwlist}
+\usepackage{hyperref}
+\usepackage[nottoc]{tocbibind}
 
 %format <*> = "\mathop{<\!\!\ast\!\!>}"
 %format <$> = "\mathop{<\!\!\$\!\!>}"
@@ -28,15 +30,15 @@
 
 This report introduces \emph{Botworld}, a cellular automaton used for studying self-modifying agents.
 
-Most formal frameworks for studying self-modifying agents split the universe into an agent and an environment. The agent interacts with the environment only via discrete input and output channels.
+The traditional agent framework, used for example in Markov Decision Processes~\cite{mdp} and in Marcus Hutter's AIXI~\cite{aixi}, splits the universe into an agent and an environment. The agent interacts with the environment only via discrete input and output channels.
 
-Such formalisms are perhaps ill-suited for real self-modifying agents, which are embedded within their environments. Indeed, the agent/environment separation is somewhat reminiscent of cartesian dualism: any agent built using such a framework does not model itself as part of its environment.
+Such formalisms are perhaps ill-suited for real self-modifying agents, which are embedded within their environments~\cite{stei}. Indeed, the agent/environment separation is somewhat reminiscent of cartesian dualism: any agent built using such a framework does not model itself as part of its environment.
 
 Intuitively, this separation is not a fatal flaw, but merely a tool for simplifying the discussion. We should be able to remove this ``cartesian'' assumption from formal models of intelligence. Botworld is a tool for probing this intuition: it provides a concrete world containing agents that we wish to act intelligently, and allows us to study what happens when the cartesian barier between an agent and its environment begins to break down.
 
 As it turns out, many interesting obstacles arise when agents are embedded in an environment. For example, agents whose source code may be read may be subjected to Newcomb-like problems (with entities that simulate the agent's actions and choose their actions accordingly).
 
-Descision theoretical tools for solving such problems alrdeady exist (such as Vladimir Slepnev's formalism of updateless decision theory); Botworld provides an environment where we can actually build the games, program the agents, and run the system.
+Descision theoretical tools for solving such problems alrdeady exist (such as Vladimir Slepnev's models of updateless decision theory~\cite{udt-halting-oracle,udt-without-proof-limits}); Botworld provides an environment where we can actually build the games, program the agents, and run the system.
 
 Furthermore, certain obstacles to self-reference arise when non-cartesian agents attempt to achieve condfidence in their future actions. Some of these issues are raised in the \emph{Tiling Agents} paper by Yudkowsky and Herreshoff; Botworld gives us a concrete environment in which we can examine them.
 
@@ -695,6 +697,9 @@ Botworld provides a very concrete environment in which to envision agents. This 
 Furthermore, Botworld allows us to constructively illustrate issues that we come across by providing a concrete game in which the issue presents itself. This can often help make the abstract problems of self-reference easier to visualize.
 
 Forthcoming papers will illustrate some of the discoveries that we've made using Botworld.
+
+\bibliography{Botworld}{}
+\bibliographystyle{plain}
 
 \newpage
 \begin{appendices}
