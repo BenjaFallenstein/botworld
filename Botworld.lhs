@@ -388,8 +388,8 @@ As we have seen, |Move| commands fail only when the robot attempts to move into 
 
 \begin{enumerate*}
   \item If the item index is out of range, the command is invalid.
-  \item If the item is not an available target then multiple robots have attempted to use the same item.
   \item If the robot lacks the strength to hold the item, the lift fails.
+  \item If the item is contested, then multiple robots have attempted to use the same item.
 \end{enumerate*}
 
 Otherwise, the lift succeeds.
@@ -400,7 +400,7 @@ Otherwise, the lift succeeds.
       tryLift item
         | not $ canLift robot item = CannotLift i
         | contested !! i = GrappledOver i
-        | otherwise = CannotLift i
+        | otherwise = Lifted i
 \end{code}
 
 |Drop| commands always succeed so long as the robot actually possesses the item they attempt to drop.
@@ -445,8 +445,8 @@ Robots \emph{can} destroy themselves. Programs should be careful to avoid uninte
 Build commands must also pass three checks in order to succeed:
 
 \begin{enumerate*}
-  \item All of the specified indexes must specify actual items.
-  \item All of the specified items must not be contested.
+  \item All of the specified indices must specify actual items.
+  \item None of the specified items may be contested.
   \item The items must together specify a robot.
 \end{enumerate*}
 
