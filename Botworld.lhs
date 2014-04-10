@@ -388,8 +388,8 @@ As we have seen, |Move| commands fail only when the robot attempts to move into 
 
 \begin{enumerate*}
   \item If the item index is out of range, the command is invalid.
-  \item If the item is not an available target then multiple robots have attempted to use the same item.
   \item If the robot lacks the strength to hold the item, the lift fails.
+  \item If the item is contested, then multiple robots have attempted to use the same item.
 \end{enumerate*}
 
 Otherwise, the lift succeeds.
