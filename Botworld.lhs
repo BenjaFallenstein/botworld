@@ -679,9 +679,7 @@ Formally, we define a game configuration as follows:
 
 \begin{code}
 data GameConfig = GameConfig
-  { players :: [(Position, String)]
-  , valuer :: Item -> Int
-  }
+  { players :: [(Position, String)], valuer :: Item -> Int }
 \end{code}
 
 With a game configuration in hand, we can compute how many points a single robot has achieved:
