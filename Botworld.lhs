@@ -445,7 +445,7 @@ Robots \emph{can} destroy themselves. Programs should be careful to avoid uninte
 Build commands must also pass three checks in order to succeed:
 
 \begin{enumerate*}
-  \item All of the specified indexes must specify actual items.
+  \item All of the specified indices must specify actual items.
   \item All of the specified items must not be contested.
   \item The items must together specify a robot.
 \end{enumerate*}
