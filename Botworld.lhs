@@ -993,7 +993,7 @@ instance Encodable Int where
       bits x = let (q, r) = quotRem x 2 in (r == 1) : bits q
 
 instance Decodable Int where
-  decode (Cons (Cons Nil (Cons Nil Nil)) n) = fmap negate $ decode n
+  decode (Cons (Cons Nil (Cons Nil Nil)) n) = negate <$> decode n
   decode t = unbits <$> decode t where
     unbits [] = 0
     unbits (x:xs) = (if x then 1 else 0) + 2 * unbits xs
