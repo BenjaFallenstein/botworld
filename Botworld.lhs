@@ -540,7 +540,7 @@ This allows us to compute a list of all robots that either started in the square
   allRobots = veterans ++ travelers ++ children
 \end{code}
 
-\subsection{Updating Items}
+\subsection{Updating items}
 
 We now compute the updated item list. It is given in three groups. The items that were unaffected:
 
