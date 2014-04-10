@@ -236,14 +236,16 @@ Available commands are:
   \item |Pass|, which has the robot do nothing.
 \end{itemize*}
 
+Robots specify the items they want to manipulate or the robots they want to target by giving the index of the target in the appropriate list. The |Int|s in |Lift| and |Build| commands index into the square's item list. The |Int|s in |Inspect| and |Destroy| commands index into the square's robot list. The |Int|s in |Drop| commands index into the inventory of the robot which gave the command.
+
 \begin{code}
 data Command
   = Move Direction
-  | Lift Int
-  | Drop Int
-  | Inspect Int
-  | Destroy Int
-  | Build [Int] Memory
+  | Lift { itemIndex :: Int }
+  | Drop { inventoryIndex :: Int }
+  | Inspect { targetIndex :: Int }
+  | Destroy { victimIndex :: Int }
+  | Build { itemIndexList :: [Int], initialState :: Memory }
   | Pass
   deriving Show
 \end{code}
@@ -301,31 +303,30 @@ Before we can compute the actions that are actually taken by each robot, we need
 \restorecolumns
 \begin{code}
   itemTargets :: [Maybe Item]
-  itemTargets = map contest uses where
-    uses = validLifts ++ concat validBuilds
+  itemTargets = map contest [0..length $ itemsIn sq] where
 \end{code}
 
 We determine the indices of items that robots want to lift by looking at all lift orders that the ordering robot could in fact carry out:\footnote{The following code introduces the helper function |(!!?) :: [a] -> Int -> Maybe a|, used to safely index into lists, which is defined in Appendix~\ref{app:helpers}.}
 
 \restorecolumns
 \begin{code}
-    validLifts = [i | (r, Lift i) <- orders, isValidLift r i]
     isValidLift r i = maybe False (canLift r) (itemsIn sq !!? i)
-    orders = [(r, cmd) | (r, Just cmd) <- zip robots intents]
+    allLifts = [i | (r, Just (Lift i)) <- zip robots intents, isValidLift r i]
 \end{code}
 
 We then determine the indices of items that robots want to use to build other robots by looking at all build orders that actually do describe a robot:
 
 \restorecolumns
 \begin{code}
-    validBuilds = [is | Build is _ <- catMaybes intents, isValidBuild is]
     isValidBuild = maybe False (isJust . construct) . mapM (itemsIn sq !!?)
+    allBuilds = [is | Build is _ <- catMaybes intents, isValidBuild is]
 \end{code}
 
 We may then determine which items are in high demand, and generate our item list with those items removed.
 
 \restorecolumns
 \begin{code}
+    uses = allLifts ++ concat allBuilds
     contest i = if i `elem` delete i uses then Nothing else itemsIn sq !!? i
 \end{code}
 
