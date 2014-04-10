@@ -983,7 +983,11 @@ instance Decodable Bool where
   decode Nil = Just False
   decode (Cons Nil Nil) = Just True
   decode _ = Nothing
+\end{code}
 
+The special token |Cons Nil (Cons Nil Nil)| (which cannot appear as an item in an encoded list of |Bool|s) is allowed to appear at the beginning of an encoded |Int|, in which case it denotes a negative sign.
+
+\begin{code}
 instance Encodable Int where
   encode n
     | n < 0 = Cons (Cons Nil (Cons Nil Nil)) (encode $ negate n)
