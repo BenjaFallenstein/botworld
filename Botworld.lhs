@@ -284,7 +284,7 @@ step :: Square -> [(Direction, Cell)] -> Square
 
 We begin by computing what each robot would like to do. We do this by reading from (and then zeroing out) the output register of the robot's register machine.
 
-This leaves us both with a list of robots (which have had their machine's output register zeroed out) and a corresponding list of robot outputs.
+This leaves us both with a list of robots (which have had their machine's output register zeroed out) and a corresponding list of robot outputs.\footnote{The following code introduces the function |takeOutput :: Decodable o => Robot -> (Robot, Maybe o)|, defined in Appendix~\ref{app:robot-machine-interactions}, which reads a robot's output register, decodes the contents into a Haskell object, and clears the register.}
 
 \savecolumns
 \begin{code}
@@ -876,7 +876,7 @@ runFor n (r:rs) = tick >>= runFor (pred n) where
   doInstruction (i, is) = execute i (r{contents=is} : rs)
 \end{code}
 
-\section{Robot/machine interactions}
+\section{Robot/machine interactions} \label{app:robot-machine-interactions}
 
 Aside from executing robot machines, there are three ways that Botworld changes a robot's register machines:
 
