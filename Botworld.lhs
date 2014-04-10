@@ -354,7 +354,7 @@ We then generate a list corresponding by index to the robot list which for each 
     isShielded i r = (attacks !! i) <= length (filter isShield $ inventory r)
 \end{code}
 
-\paragraph{Any robot that exits the square in this step cannot be attacked in this step.} Moving robots evade their pursuers. The shields of moving robots are not destroyed. Note that this is not a foolproof defense: a robot cornered by walls had best have some shields handy. Nevertheless, we define a function that determines whether a robot has fled. This function makes use of the fact that movement commands into non-wall cells always succeed.
+\paragraph{Any robot that exits the square in this step cannot be attacked in this step.} Moving robots evade their pursuers, and the shields of moving robots are not destroyed. We define a function that determines whether a robot has successfully fled. This function makes use of the fact that movement commands into non-wall cells always succeed.
 
 \restorecolumns
 \begin{code}
