@@ -706,7 +706,7 @@ Botworld provides a very concrete environment in which to envision agents. This 
 
 Furthermore, Botworld allows us to constructively illustrate issues that we come across by providing a concrete game in which the issue presents itself. This can often help make the abstract problems of self-reference easier to visualize.
 
-Forthcoming work will illustrate some of the discoveries that we've made using Botworld.
+Forthcoming publications will illustrate some of the work that we've done based on Botworld.
 
 \begin{appendices}
 
