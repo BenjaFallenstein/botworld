@@ -623,7 +623,7 @@ With these inputs in hand, we can run any given robot by updating their input re
     items = (unaffected, dropped, fallen)
 \end{code}
 
-The register machines are run as described in the following function. It makes use of the constree register machine; refer to Appendix~\ref{app:constree} for details.
+The register machines are run as described in the following function. It makes use of the constree register machine, specifically the function |runFor :: Int -> Memory -> Either Error Memory|. Refer to Appendix~\ref{app:constree} for details.
 
 \restorecolumns
 \begin{code}
