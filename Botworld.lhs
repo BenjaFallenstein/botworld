@@ -442,7 +442,8 @@ Robots \emph{can} destroy themselves. Programs should be careful to avoid uninte
         | otherwise = Destroyed i
 \end{code}
 
-Build commands must also pass three checks in order to succeed:
+Build commands must also pass three checks in order to succeed:\footnote{The following code introduces the function |setState :: Memory -> Robot -> Robot|, defined in Appendix~\ref{app:robot-machine-interactions}.}
+
 
 \begin{enumerate*}
   \item All of the specified indices must specify actual items.
