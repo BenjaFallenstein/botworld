@@ -612,7 +612,7 @@ Also, the private input differentiates between |Invalid| and |Passed| actions in
   privateInput _ = encode (0 :: Int)
 \end{code}
 
-With these inputs in hand, we can run any given robot by updating their input register appropriately and then running the robot's register machine:
+With these inputs in hand, we can run any given robot by updating their input register appropriately and then running the robot's register machine:\footnote{The following code introduces the function |setInput :: Encodable i => Robot -> i -> Robot|, defined in Appendix~\ref{app:robot-machine-interactions}.}
 
 \restorecolumns
 \begin{code}
