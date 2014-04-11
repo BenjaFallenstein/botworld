@@ -582,7 +582,7 @@ All robots that remain in the square (and were not destroyed) will have their re
 \begin{enumerate*}
   \item The host robot's index in the following list.
   \item The list of all robots in the square, including robots that exited, entered, were destroyed, and were created.
-  \item A list of actions for each robot, corresponding to the list above.
+  \item A list of actions corresponding to the list of robots.
   \item The updated item list, with some additional structure.
   \item Some private input.
 \end{enumerate*}
