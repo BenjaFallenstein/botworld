@@ -498,12 +498,12 @@ Robot inventories are updated whenever the robot executes a |Lift| action, execu
 \restorecolumns
 \begin{code}
   updateInventory :: Int -> Action -> Robot -> Robot
-  updateInventory i a r = case a of
+  updateInventory i a r = let stale = inventory r in case a of
     MovedOut _ -> r
-    Lifted n -> r{inventory=(itemsIn sq !! n) : defended}
-    Dropped n -> r{inventory=delete (inventory r !! n) defended}
-    _ -> r{inventory=defended}
-    where defended = dropN (attacks !! i) isShield $ inventory r
+    Lifted n -> r{inventory=(itemsIn sq !! n) : defend stale}
+    Dropped n -> r{inventory=defend $ removeIndices [n] stale}
+    _ -> r{inventory=defend stale}
+    where defend = dropN (attacks !! i) isShield
 \end{code}
 
 We use this function to update the inventories of all robots that were originally in this square. Notice that the inventories of destroyed robots are updated as well: destroyed robots get to perform their actions before they are destroyed.
@@ -528,8 +528,7 @@ With this we can compute the list of items that fall from destroyed robots, give
 \restorecolumns
 \begin{code}
   fallen :: [([Item], [Item])]
-  fallen = [itemsOf r | (r, False) <- zip veterans survived] where
-    itemsOf r = (shatter r, filter (not . isShield) (inventory r))
+  fallen = [(shatter r, inventory r) | (r, False) <- zip veterans survived]
 \end{code}
 
 We retain some structure in the list of fallen items which will be made visible to surviving robots in their program input.
@@ -583,7 +582,7 @@ All robots that remain in the square (and were not destroyed) will have their re
 \begin{enumerate*}
   \item The host robot's index in the following list.
   \item The list of all robots in the square, including robots that exited, entered, were destroyed, and were created.
-  \item A list of actions for each robot, corresponding to the list above.
+  \item A list of actions corresponding to the list of robots.
   \item The updated item list, with some additional structure.
   \item Some private input.
 \end{enumerate*}
@@ -680,9 +679,7 @@ Formally, we define a game configuration as follows:
 
 \begin{code}
 data GameConfig = GameConfig
-  { players :: [(Position, String)]
-  , valuer :: Item -> Int
-  }
+  { players :: [(Position, String)], valuer :: Item -> Int }
 \end{code}
 
 With a game configuration in hand, we can compute how many points a single robot has achieved:
@@ -983,7 +980,11 @@ instance Decodable Bool where
   decode Nil = Just False
   decode (Cons Nil Nil) = Just True
   decode _ = Nothing
+\end{code}
 
+The special token |Cons Nil (Cons Nil Nil)| (which cannot appear as an item in an encoded list of |Bool|s) is allowed to appear at the beginning of an encoded |Int|, in which case it denotes a negative sign.
+
+\begin{code}
 instance Encodable Int where
   encode n
     | n < 0 = Cons (Cons Nil (Cons Nil Nil)) (encode $ negate n)
@@ -993,7 +994,7 @@ instance Encodable Int where
       bits x = let (q, r) = quotRem x 2 in (r == 1) : bits q
 
 instance Decodable Int where
-  decode (Cons (Cons Nil (Cons Nil Nil)) n) = fmap negate $ decode n
+  decode (Cons (Cons Nil (Cons Nil Nil)) n) = negate <$> decode n
   decode t = unbits <$> decode t where
     unbits [] = 0
     unbits (x:xs) = (if x then 1 else 0) + 2 * unbits xs
