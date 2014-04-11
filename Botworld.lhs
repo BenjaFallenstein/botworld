@@ -305,7 +305,7 @@ Before we can compute the actions that are actually taken by each robot, we need
 \restorecolumns
 \begin{code}
   contested :: [Bool]
-  contested = map isContested [0..length $ itemsIn sq] where
+  contested = map isContested [0..pred $ length $ itemsIn sq] where
 \end{code}
 
 We determine the indices of items that robots want to lift by looking at all lift orders that the ordering robot could in fact carry out:\footnote{The following code introduces the helper function |(!!?) :: [a] -> Int -> Maybe a|, used to safely index into lists, which is defined in Appendix~\ref{app:helpers}.}
@@ -339,7 +339,7 @@ To implement this behavior, we generate first a list corresponding by index to t
 \restorecolumns
 \begin{code}
   attacks :: [Int]
-  attacks = map numAttacks [0..length $ robotsIn sq] where
+  attacks = map numAttacks [0..pred $ length $ robotsIn sq] where
     numAttacks i = length $ filter (== i) allAttacks
     allAttacks = mapMaybe (getAttack =<<) intents
     getAttack (Inspect i) = Just i
@@ -520,7 +520,7 @@ Now that we know the updated states of the robots, we can compute what items fal
 \restorecolumns
 \begin{code}
   survived :: [Bool]
-  survived = map isAlive [0..] where
+  survived = map isAlive [0..pred $ length veterans] where
     isAlive n = n `notElem` [i | Destroyed i <- localActions]
 \end{code}
 
