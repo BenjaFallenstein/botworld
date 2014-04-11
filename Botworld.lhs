@@ -654,19 +654,23 @@ Finally, we construct the new robot list by running all present robots.
 
 \subsection{Summary}
 
-This fully specifies the step function for Botworld cells. To reiterate:
+This fully specifies the step function for Botworld cells. To summarize:
 
 \begin{enumerate*}
   \item Robot machine output registers are read to determine robot intents.
   \item Robot actions are computed from robot intents.
+  \item Lifted and dropped items are computed.
   \item Robot inventories are updated.
+  \item Fallen items are computed.
+  \item The item list for the updated square is determined.
   \item Incoming robots are computed.
-  \item Unmoved, dropped, and fallen items are computed.
-  \item Destroyed robots are removed, constructed robots are added.
-  \item Machine input registers are set according to the updated state.
-  \item Robot register machines are executed (and are expected to leave a command in the output register for the next step).
-  \item The updated item list is constructed.
+  \item Constructed robots are added to consideration.
+  \item Destroyed robots are removed from consideration.
+  \item Machine input registers are set.
+  \item Robot register machines are executed.
 \end{enumerate*}
+
+As noted previously, machine programs are expected to leave a command in the output register for use in the next step.
 
 \section{Games} \label{sec:games}
 
